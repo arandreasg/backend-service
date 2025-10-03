@@ -1,0 +1,29 @@
+_format_version: "3.0"
+
+services:
+  - name: backend-service
+    url: http://traefik:80/backend
+    routes:
+      - name: backend-route
+        paths:
+          - /api
+  
+plugins:
+ - name: jwt
+   service: backend-service
+   config:
+     key_claim_name: iss
+     secret_is_base64: false
+     run_on_preflight: true
+ - name: rate-limiting
+   service: my-service
+   config:
+      minute: 5          # allow 5 requests per minute
+      policy: local      # local in-memory counter
+      limit_by: consumer # limit per consumer (JWT client)
+
+consumers:
+ - username: my-app
+   jwt_secrets:
+     - key: my-key
+       secret: my-secret
